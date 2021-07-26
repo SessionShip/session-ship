@@ -7,7 +7,7 @@
 require __DIR__ . "/session/session.php";
 $session = new \PHP\Session\sessionLibrary();
 //Create Session, this function required.
-$session->createSession("name","Recep");
+$session->createSession();
 //Reading the session's cookie information.
 $session->getSessionId();
 //Adding value to the session.
@@ -19,7 +19,7 @@ $session->deleteValue("surname");
 //You check if the session value exists, it returns false or true.
 $session->checkValue("name"); //true
 //It allows you to read the session value, use echo to project it to the screen.
-$session->getSessionValue("name");
+$session->readValue("name");
 //Check if the session exists , it returns false or true.
 $session->checkSession(); //true
 //Terminates the session.
