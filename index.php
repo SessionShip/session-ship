@@ -1,7 +1,7 @@
 <?php 
 /**
- * @author RecepBagiryanik, MamiWebDev
- * @github RecepBagiryanik, MamiWebDev
+ * @author RecepBagiryanik
+ * @github RecepBagiryanik
  * SessionShip functions test file.
  */
 require __DIR__ . "/session/session.php";
