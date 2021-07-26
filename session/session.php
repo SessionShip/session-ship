@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @author RecepBagiryanik, MamiWebDev
  * @github RecepBagiryanik, MamiWebDev
@@ -20,16 +21,20 @@ class sessionLibrary
     {
         //Do not handle this part.
         if ($this->checkSession()) {
-            if($this->getSessionValue("userIP") != $this->getUserIP()) {
+            if($this->readValue("userIP") != $this->getUserIP()) {
                 $this->sessionDestroy();
                 return false;
             } else {
-                if($this->getSessionValue("userAgent") != $_SERVER["HTTP_USER_AGENT"]) {
+                if($this->readValue("userAgent") != $_SERVER["HTTP_USER_AGENT"]) {
                     $this->sessionDestroy();
                     return false;
                 } else {
                     return true;
                 }
+            }
+            
+            if($this->readValue("userIP") == false) {
+                $this->sessionDestroy();
             }
         }
     }
@@ -43,15 +48,18 @@ class sessionLibrary
         return $_SERVER["REMOTE_ADDR"];
     }
 
-    public function createSession($sessionName, $sessionValue)
+    public function createSession()
     {
         //Create Session, this function required.
         if ($this->checkSession()) {
             return false;
         } else {
-            $sessionArray = json_encode(array($sessionName, $sessionValue, "userIP", $this->getUserIP(), "userAgent" => $_SERVER["HTTP_USER_AGENT"]));
+            $randomToken = md5(uniqid());
+            $sessionArray = json_encode(array("userIP", $this->getUserIP(), "userAgent", $_SERVER["HTTP_USER_AGENT"]));
             $sessionId = openssl_encrypt($sessionArray, "AES-256-CBC", self::$sessionKey);
-            setcookie(self::$cookieName, $sessionId);
+            $arraySession = json_encode(array($randomToken, $sessionId));
+            file_put_contents(__DIR__ . "/storage/sessions.txt", file_get_contents(__DIR__ . "/storage/sessions.txt") . $arraySession . "&");
+            setcookie(self::$cookieName, $randomToken);
         }
     }
 
@@ -66,20 +74,34 @@ class sessionLibrary
         //Terminates the session.
         if ($this->checkSession()) {
             setcookie(self::$cookieName, "", strtotime("-365 years"));
+            $content = file_get_contents(__DIR__ . "/storage/sessions.txt");
+            $explodeContent = explode("&", $content);
+            $found2 = preg_grep('["' . $this->getSessionId() . '","(.*)"]', $explodeContent);
+            $found = array_search(max($found2), $explodeContent);
+            $newContent = str_replace(max($found2) . "&", "", $content);
+            file_put_contents(__DIR__ . "/storage/sessions.txt", $newContent);
+            return true;
         }
     }
 
     public function addValue($valueName, $value)
     {
         //Adding value to the session.
-        if ($this->getSessionValue($valueName) == false) {
-            $decodeOne = openssl_decrypt($this->getSessionId(), "AES-256-CBC", self::$sessionKey);
-            $decoded = json_decode($decodeOne);
-            array_push($decoded, $valueName);
-            array_push($decoded, $value);
-            $sessionArray = json_encode($decoded);
+        if ($this->readValue($valueName) == false) {
+            $content = file_get_contents(__DIR__ . "/storage/sessions.txt");
+            $explodeContent = explode("&", $content);
+            $found2 = preg_grep('["' . $this->getSessionId() . '","(.*)"]', $explodeContent);
+            $found = array_search(max($found2), $explodeContent);
+            $decoded = json_decode($explodeContent[$found], true);
+            $decodeOne = openssl_decrypt($decoded[1], "AES-256-CBC", self::$sessionKey);
+            $jsonDecoded = json_decode($decodeOne);
+            array_push($jsonDecoded, $valueName);
+            array_push($jsonDecoded, $value);
+            $sessionArray = json_encode($jsonDecoded);
             $encryptData = openssl_encrypt($sessionArray, "AES-256-CBC", self::$sessionKey);
-            setcookie(self::$cookieName, $encryptData);
+            $readContent = '["' . $this->getSessionId() . '","' . $encryptData . '"]';
+            $newContent = str_replace(max($found2), $readContent, $content);
+            file_put_contents(__DIR__ . "/storage/sessions.txt", $newContent);
             return true;
         } else {
             return false;
@@ -89,34 +111,48 @@ class sessionLibrary
     public function editValue($valueName, $value)
     {
         //Allows you to change the session value.
-        if($this->getSessionValue($valueName) == false) {
+        if ($this->readValue($valueName) == false) {
             return false;
         } else {
-            $decodeOne = openssl_decrypt($this->getSessionId(), "AES-256-CBC", self::$sessionKey);
-            $decoded = json_decode($decodeOne);
-            $found = array_search($valueName, $decoded);
-            $arrayOne = array($found => $valueName, $found+1 => $value);
-            $edited = array_replace($decoded, $arrayOne);
-            $sessionArray = json_encode($edited);
+            $content = file_get_contents(__DIR__ . "/storage/sessions.txt");
+            $explodeContent = explode("&", $content);
+            $found2 = preg_grep('["' . $this->getSessionId() . '","(.*)"]', $explodeContent);
+            $found = array_search(max($found2), $explodeContent);
+            $decoded = json_decode($explodeContent[$found], true);
+            $decodeOne = openssl_decrypt($decoded[1], "AES-256-CBC", self::$sessionKey);
+            $jsonDecoded = json_decode($decodeOne);
+            $search = array_search($valueName, $jsonDecoded);
+            $replace = array($search + 1 => $value);
+            $newContent = array_replace($jsonDecoded, $replace);
+            $sessionArray = json_encode($newContent);
             $encryptData = openssl_encrypt($sessionArray, "AES-256-CBC", self::$sessionKey);
-            setcookie(self::$cookieName, $encryptData);
+            $readContent = '["' . $this->getSessionId() . '","' . $encryptData . '"]';
+            $newContent = str_replace(max($found2), $readContent, $content);
+            file_put_contents(__DIR__ . "/storage/sessions.txt", $newContent);
         }
     }
 
     public function deleteValue($valueName)
     {
         //Delete value
-        if ($this->getSessionValue($valueName) == false) {
+        if ($this->readValue($valueName) == false) {
             return false;
         } else {
-            $decodeOne = openssl_decrypt($this->getSessionId(), "AES-256-CBC", self::$sessionKey);
-            $decoded = json_decode($decodeOne);
-            $found = array_search($valueName, $decoded);
-            unset($decoded[$found]);
-            unset($decoded[$found + 1]);
-            $sessionArray = json_encode($decoded);
+            $content = file_get_contents(__DIR__ . "/storage/sessions.txt");
+            $explodeContent = explode("&", $content);
+            $found2 = preg_grep('["' . $this->getSessionId() . '","(.*)"]', $explodeContent);
+            $found = array_search(max($found2), $explodeContent);
+            $decoded = json_decode($explodeContent[$found], true);
+            $decodeOne = openssl_decrypt($decoded[1], "AES-256-CBC", self::$sessionKey);
+            $jsonDecoded = json_decode($decodeOne);
+            $search = array_search($valueName, $jsonDecoded);
+            unset($jsonDecoded[$search]);
+            unset($jsonDecoded[$search + 1]);
+            $sessionArray = json_encode($jsonDecoded);
             $encryptData = openssl_encrypt($sessionArray, "AES-256-CBC", self::$sessionKey);
-            setcookie(self::$cookieName, $encryptData);
+            $readContent = '["' . $this->getSessionId() . '","' . $encryptData . '"]';
+            $newContent = str_replace(max($found2), $readContent, $content);
+            file_put_contents(__DIR__ . "/storage/sessions.txt", $newContent);
             return true;
         }
     }
@@ -124,21 +160,26 @@ class sessionLibrary
     public function checkValue($valueName)
     {
         //You check if the session value exists, it returns false or true.
-        if($this->getSessionValue($valueName) == false) {
+        if ($this->readValue($valueName) == false) {
             return false;
         } else {
             return true;
         }
     }
 
-    public function getSessionValue($valueName)
+    public function readValue($valueName)
     {
         //It allows you to read the session value, use echo to project it to the screen.
-        error_reporting(0);
-        $decodeOne = openssl_decrypt($this->getSessionId(), "AES-256-CBC", self::$sessionKey);
+        $content = file_get_contents(__DIR__ . "/storage/sessions.txt");
+        $explodeContent = explode("&", $content);
+        $found = preg_grep('["' . $this->getSessionId() . '","(.*)"]', $explodeContent);
+        $found = array_search(max($found), $explodeContent);
+        $decodedContent = json_decode($explodeContent[$found], true);
+        $foundT = array_search($this->getSessionId(), $decodedContent);
+        $decodeOne = openssl_decrypt($decodedContent[$foundT + 1], "AES-256-CBC", self::$sessionKey);
         $decoded = json_decode($decodeOne);
         $found = array_search($valueName, $decoded);
-        if (!empty($found)) {
+        if ($found > -1) {
             return $decoded[$found + 1];
         } else {
             return false;
