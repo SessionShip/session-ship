@@ -1,7 +1,7 @@
 # session-ship
 This library fix php session hijacking and more weakness. Increase security!
-# Developers
-Developers : RecepBagiryanik
+# Developer
+Developer : RecepBagiryanik
 
 # Update Notes - V 1.0.1
 
