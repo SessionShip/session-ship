@@ -19,9 +19,6 @@ if(isset($_POST["send"])) {
         echo "true";
     }
 }
-
-//$flex = openssl_decrypt($session->getSessionId(), "AES-256-CBC", "1234");
-//print_r(json_decode($flex));
 ?>
 <h4>LOGİN - TEST</h4>
 <form action="" method="post">
