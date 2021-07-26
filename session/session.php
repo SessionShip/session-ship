@@ -1,8 +1,8 @@
 <?php
 
 /**
- * @author RecepBagiryanik, MamiWebDev
- * @github RecepBagiryanik, MamiWebDev
+ * @author RecepBagiryanik
+ * @github RecepBagiryanik
  * This library fix php session hijacking and more weakness. Increase security!
  * SessionShip!
  */
