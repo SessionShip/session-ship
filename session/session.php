@@ -1,23 +1,24 @@
 <?php
-
 /**
- * @author RecepBagiryanik
- * @github RecepBagiryanik
+ * @author RecepBagiryanik, MamiWebDev
+ * @github RecepBagiryanik, MamiWebDev
  * This library fix php session hijacking and more weakness. Increase security!
+ * SessionShip!
  */
 
 namespace PHP\Session;
 
-
+error_reporting(0);
 define("__SERVER__", $_SERVER["DOCUMENT_ROOT"]);
 class sessionLibrary
 {
-    //Set session key! NOT SHARE WITH ANYONE!
+    //Set session key, required variable! NOT SHARE WITH ANYONE!
     public static $sessionKey = 1234;
+    //Set cookie name, required variable!
     public static $cookieName = "ws-session";
     public function __construct()
     {
-        //Check user IP
+        //Do not handle this part.
         if ($this->checkSession()) {
             if($this->getSessionValue("userIP") != $this->getUserIP()) {
                 $this->sessionDestroy();
@@ -35,7 +36,7 @@ class sessionLibrary
 
     public function getUserIP()
     {
-        //Get User IP
+        //This function allows you to get the ip address of the user.
         if (isset($_SERVER["HTTP_CF_CONNECTING_IP"])) {
             $_SERVER['REMOTE_ADDR'] = $_SERVER["HTTP_CF_CONNECTING_IP"];
         }
@@ -62,7 +63,7 @@ class sessionLibrary
 
     public function sessionDestroy()
     {
-        //Session Destroy
+        //Terminates the session.
         if ($this->checkSession()) {
             setcookie(self::$cookieName, "", strtotime("-365 years"));
         }
@@ -122,6 +123,7 @@ class sessionLibrary
 
     public function checkValue($valueName)
     {
+        //You check if the session value exists, it returns false or true.
         if($this->getSessionValue($valueName) == false) {
             return false;
         } else {
@@ -131,7 +133,7 @@ class sessionLibrary
 
     public function getSessionValue($valueName)
     {
-        //Read session value, use the echo.
+        //It allows you to read the session value, use echo to project it to the screen.
         error_reporting(0);
         $decodeOne = openssl_decrypt($this->getSessionId(), "AES-256-CBC", self::$sessionKey);
         $decoded = json_decode($decodeOne);
