@@ -27,3 +27,4 @@ $session->sessionDestroy();
 //This function allows you to get the ip address of the user.
 $session->getUserIP();
 ?>
+2
