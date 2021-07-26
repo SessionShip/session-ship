@@ -1,28 +1,29 @@
 <?php 
 /**
- * @author RecepBagiryanik
- * @github RecepBagiryanik
- * Session library test file.
+ * @author RecepBagiryanik, MamiWebDev
+ * @github RecepBagiryanik, MamiWebDev
+ * SessionShip functions test file.
  */
 require __DIR__ . "/session/session.php";
 $session = new \PHP\Session\sessionLibrary();
-
-if(empty($session->checkSession("csrftoken"))) {
-    $session->addValue("csrftoken", md5(uniqid()));
-}
-
-if(isset($_POST["send"])) {
-    if($session->getSessionValue("csrftoken") != $_POST["csrftoken"]) {
-        echo "false";
-    } else {
-        $session->editValue("csrftoken", md5(uniqid()));
-        echo "true";
-    }
-}
+//Create Session, this function required.
+$session->createSession("name","Recep");
+//Reading the session's cookie information.
+$session->getSessionId();
+//Adding value to the session.
+$session->addValue("surname", "Bagiryanik");
+//Allows you to change the session value.
+$session->editValue("surname","Jhs");
+//Delete value
+$session->deleteValue("surname");
+//You check if the session value exists, it returns false or true.
+$session->checkValue("name"); //true
+//It allows you to read the session value, use echo to project it to the screen.
+$session->getSessionValue("name");
+//Check if the session exists , it returns false or true.
+$session->checkSession(); //true
+//Terminates the session.
+$session->sessionDestroy();
+//This function allows you to get the ip address of the user.
+$session->getUserIP();
 ?>
-<h4>LOGİN - TEST</h4>
-<form action="" method="post">
-    <input type="text" name="username">
-    <input type="text" name="csrftoken" value="<?php echo $session->getSessionValue("csrftoken"); ?>">
-    <input type="submit" name="send">
-</form>
